@@ -1,0 +1,160 @@
+# Autenticando o programa com o google sheets
+from google.colab import auth
+import gspread
+from oauth2client.client import GoogleCredentials
+
+auth.authenticate_user()
+gc = gspread.authorize(GoogleCredentials.get_application_default())
+
+# Limpando os dados da planilha
+from google.colab import auth
+import gspread
+from oauth2client.client import GoogleCredentials
+
+auth.authenticate_user()
+gc = gspread.authorize(GoogleCredentials.get_application_default())
+
+import numpy as np
+import time
+import random
+!pip install gspread_formatting
+from gspread_formatting import *
+import time
+from pprint import pprint
+
+numero_de_pessoas = 17
+
+planilha = gc.open('GIG 2021.2')
+pagina = planilha.worksheet('Semana 9')
+
+
+#lista com todas as atividades
+lista = [pagina.acell(f'J{295+s}').value for s in range(0,25)]
+[lista.append(pagina.acell(f'P{295+s}').value) for s in range(0,22)]
+[lista.append(pagina.acell(f'U{295+s}').value) for s in range(0,31)]
+[lista.append(pagina.acell(f'Y{295+s}').value) for s in range(0,9)]
+lista[0:0] = ['Nome', 'Semana', 'Status', 'Planejamento','Total','Atividades Gerais',
+              'Atividades Teóricas', 'Atividades Processos', 'Atividades de Capacitação Prática'] # planejamento para dizer se vai corresponder aos dados planejados ou aos dados realizados e o total para as horas totais
+
+print(lista)
+# para preencher corretamente as linhas na ´planilha dos dados
+soma_p = 376
+soma_r = soma_p + 1
+
+criar_coluna = input('Deseja criar as colunas com os nomes dos dados? (s para sim e n para não)')
+banco_dados = gc.open('dados_analise')
+pb = banco_dados.get_worksheet(2)
+
+if criar_coluna == 's':
+  pb.insert_row(lista,1)
+
+for x in range(12,13):
+  pagina = planilha.worksheet(f'Semana {x}')
+  auth.authenticate_user()
+  gc = gspread.authorize(GoogleCredentials.get_application_default())
+
+
+  for c in range(0, numero_de_pessoas):
+      dicio_p = {a:'0' for a in lista}
+      dicio_r = {a:'0' for a in lista}
+      nome = pagina.acell(f'D{17+c*14}').value
+      dicio_p['Nome'] = nome
+      dicio_r['Nome'] = nome
+      dicio_p['Planejamento'] = 'Planejado'
+      dicio_r['Planejamento'] = 'Realizado'
+
+      if nome == '':
+        pass
+      else:
+
+        dicio_p['Semana'] = pagina.title
+        dicio_r['Semana'] = pagina.title
+
+        # a = atividade, p = planejado, r = realizado, g = gerais, t = teórico, 
+        # prc = processo, cprat = capacitação prática
+        carga_p = pagina.acell(f'F{10 +c*14}:{12+c*14}').value
+        carga_r = pagina.acell(f'F{16 +c*14}:{18+c*14}').value
+        dicio_p['Total'] = carga_p
+        dicio_r['Total'] = carga_r
+
+        status_esperado = pagina.acell(f'D{8+c*14}').value
+        status_alcançado = pagina.acell(f'D{18+c*14}').value
+        dicio_p['Status'] = status_esperado
+        dicio_r['Status'] = status_alcançado
+
+        total_p_a_g = pagina.acell(f'K{19+c*14}').value
+        total_r_a_g = pagina.acell(f'L{19+c*14}').value
+        dicio_p['Atividades Gerais'] = total_p_a_g
+        dicio_r['Atividades Gerais'] = total_r_a_g
+
+        total_p_a_t = pagina.acell(f'Q{19+c*14}').value
+        total_r_a_t = pagina.acell(f'R{19+c*14}').value
+        dicio_p['Atividades Teóricas'] = total_p_a_t
+        dicio_r['Atividades Teóricas'] = total_r_a_t
+
+        total_p_a_prc = pagina.acell(f'V{19+c*14}').value
+        total_r_a_prc = pagina.acell(f'W{19+c*14}').value
+        dicio_p['Atividades Processos'] = total_p_a_prc
+        dicio_r['Atividades Processos'] = total_r_a_prc
+
+        total_p_a_cprat = pagina.acell(f'Z{19+c*14}').value
+        total_r_a_cprat = pagina.acell(f'AA{19+c*14}').value
+        dicio_p['Atividades de Capacitação Prática'] = total_p_a_cprat
+        dicio_r['Atividades de Capacitação Prática'] = total_r_a_cprat
+
+        #loop por atividade
+        for d in range(0,11):
+
+          # atividades gerais
+          nome_a_g = pagina.acell(f'J{8 +d +c*14}').value
+          if nome_a_g != '':
+            p_a_g = pagina.acell(f'K{8 +d +c*14}').value
+            r_a_g = pagina.acell(f'L{8 +d +c*14}').value
+            dicio_p[nome_a_g] = p_a_g
+            dicio_r[nome_a_g] = r_a_g
+
+          # atividades teóricas
+          nome_a_t = pagina.acell(f'P{8 +d +c*14}').value
+          if nome_a_t != '':
+            p_a_t = pagina.acell(f'Q{8 +d +c*14}').value
+            r_a_t = pagina.acell(f'R{8 +d +c*14}').value
+            dicio_p[nome_a_t] = p_a_t
+            dicio_r[nome_a_t] = r_a_t
+
+          # atividades de processos
+          nome_a_prc = pagina.acell(f'U{8 +d +c*14}').value
+          if nome_a_prc != '':
+            p_a_prc = pagina.acell(f'V{8 +d +c*14}').value
+            r_a_prc = pagina.acell(f'W{8 +d +c*14}').value
+            dicio_p[nome_a_prc] = p_a_prc
+            dicio_r[nome_a_prc] = r_a_prc
+
+          # atividades práticas
+          nome_a_cprat = pagina.acell(f'Y{8 +d +c*14}').value
+          if nome_a_cprat != '':
+            p_a_cprat = pagina.acell(f'Z{8 +d +c*14}').value
+            r_a_cprat = pagina.acell(f'AA{8 +d +c*14}').value
+            dicio_p[nome_a_cprat] = p_a_cprat
+            dicio_r[nome_a_cprat] = r_a_cprat
+
+        for y in range(0,len(lista)):
+          try:
+            z = pb.find(lista[y])
+            valor_p = dicio_p[lista[y]]
+            valor_r = dicio_r[lista[y]]
+            if valor_p =='':
+              valor_p = '0' 
+            if valor_r =='':
+              valor_r = '0'
+          except:
+            valor_p = '0'
+            valor_r = '0'
+
+                 
+          pb.update_cell(soma_p,z.col,str(valor_p).replace('.', ','))
+          pb.update_cell(soma_r,z.col,str(valor_r).replace('.', ','))
+
+        soma_p = soma_p + 2
+        soma_r = soma_r + 2
+
+
